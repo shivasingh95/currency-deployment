@@ -1,34 +1,42 @@
-from flask import Flask, request, jsonify
-import cv2
+import streamlit as st
+import tensorflow as tf
 import numpy as np
-from model_utils import predict_from_image
+from PIL import Image
 
-app = Flask(__name__)
+# Page config
+st.set_page_config(page_title="Currency Classifier", layout="centered")
 
-@app.route("/")
-def home():
-    return "✅ Currency Classification API is running!"
+# Load model once
+@st.cache_resource
+def load_model():
+    return tf.keras.models.load_model("final_currency_model.keras")
 
-@app.route("/predict", methods=["POST"])
-def predict():
-    if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+model = load_model()
 
-    file = request.files["file"]
+# Update according to your training class order
+CLASS_NAMES = ["10", "20", "50", "100", "200", "500"]
 
-    img_bytes = file.read()
-    np_arr = np.frombuffer(img_bytes, np.uint8)
-    image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+st.title("💵 Currency Classification System")
+st.write("Upload an image of currency note to classify.")
 
-    if image is None:
-        return jsonify({"error": "Invalid image"}), 400
+uploaded_file = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
 
-    label, confidence = predict_from_image(image)
+if uploaded_file is not None:
+    image = Image.open(uploaded_file).convert("RGB")
+    st.image(image, caption="Uploaded Image", use_container_width=True)
 
-    return jsonify({
-        "prediction": label,
-        "confidence": round(confidence, 4)
-    })
+    # Preprocess
+    img = image.resize((224, 224))
+    img_array = np.array(img) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # Prediction
+    with st.spinner("🔍 Predicting..."):
+        predictions = model.predict(img_array)
+        predicted_index = np.argmax(predictions)
+        confidence = float(np.max(predictions))
+
+    label = CLASS_NAMES[predicted_index]
+
+    st.success(f"Prediction: ₹ {label}")
+    st.write(f"Confidence: {confidence:.4f}")
