@@ -12,7 +12,7 @@ st.write("Upload a currency note image to classify")
 # Load model once
 @st.cache_resource
 def load_model():
-    model = tf.keras.models.load_model("converted_model.h5", compile=False)
+    model = tf.keras.models.load_model("converted_model.h5")
     return model
 
 model = load_model()
@@ -40,3 +40,4 @@ if uploaded_file is not None:
 
     st.success(f"Prediction: ₹ {predicted_label}")
     st.write(f"Confidence: {confidence:.4f}")
+
