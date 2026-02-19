@@ -9,8 +9,7 @@ st.title("💰 Smart Automatic Donation System")
 
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model("final_currency_model.keras", compile=False)
-
+    return tf.keras.models.load_model("final_currency_model_fixed.h5", compile=False)
 model = load_model()
 
 CLASS_NAMES = ['10','100','20','200','5','50','500','None']
